@@ -28,8 +28,6 @@ start_service() {
 
 	enabled || return 0
 
-	[ -x "$PRPLMESH_DIR/bin/ieee1905_transport" ] || return 1
-
 	# A standalone controller runs without local radios, a plain agent
 	# without the controller; everything else keeps both.
 	mode="$(uci -q get prplmesh.config.management_mode)"
@@ -38,19 +36,36 @@ start_service() {
 	Multi-AP-Agent) need_controller=0 ;;
 	esac
 
-	register_process transport "$PRPLMESH_DIR/bin/ieee1905_transport"
+	[ -x "$PRPLMESH_DIR/bin/ieee1905_transport" ] || {
+		logger -t prplmesh "ieee1905_transport is missing or not executable"
+		return 1
+	}
 
 	if [ "$need_controller" = 1 ]; then
-		[ -x "$PRPLMESH_DIR/bin/beerocks_controller" ] || return 1
-		register_process controller "$PRPLMESH_DIR/bin/beerocks_controller"
+		[ -x "$PRPLMESH_DIR/bin/beerocks_controller" ] || {
+			logger -t prplmesh "beerocks_controller is missing or not executable"
+			return 1
+		}
 	fi
 
 	if [ "$need_agent" = 1 ]; then
-		[ -x "$PRPLMESH_DIR/bin/beerocks_agent" ] || return 1
+		[ -x "$PRPLMESH_DIR/bin/beerocks_agent" ] || {
+			logger -t prplmesh "beerocks_agent is missing or not executable"
+			return 1
+		}
 		[ -n "$(uci -q get prplmesh.config.mandatory_interfaces)" ] || {
 			logger -t prplmesh "mandatory_interfaces not set; agent left stopped"
 			return 1
 		}
+	fi
+
+	register_process transport "$PRPLMESH_DIR/bin/ieee1905_transport"
+
+	if [ "$need_controller" = 1 ]; then
+		register_process controller "$PRPLMESH_DIR/bin/beerocks_controller"
+	fi
+
+	if [ "$need_agent" = 1 ]; then
 		# hostapd recreates its control sockets on boot and on wireless
 		# reloads, so wait for them under procd supervision instead of
 		# failing the whole start on a transient race.
