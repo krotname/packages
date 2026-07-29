@@ -1,0 +1,9 @@
+--- a/common/beerocks/scripts/prplmesh_utils.sh.in
++++ b/common/beerocks/scripts/prplmesh_utils.sh.in
+@@ -166,5 +166,5 @@
+ main() {
+     case "${TARGET_PLATFORM}" in
+-        linux|rdkb)
++        linux|rdkb|openwrt)
+             ;;
+         *)

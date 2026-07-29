@@ -14,6 +14,7 @@ prplmesh)
 		grep -Fx 'log_global_syslog_levels=error,info,warning,fatal' "$config"
 	done
 	test -x /usr/libexec/prplmesh/scripts/prplmesh_utils.sh
+	/usr/libexec/prplmesh/scripts/prplmesh_utils.sh -h >/dev/null
 	;;
 *)
 	echo "Untested package: $PKG_NAME" >&2
