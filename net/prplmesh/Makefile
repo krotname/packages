@@ -2,7 +2,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=prplmesh
 PKG_VERSION:=6.0.1
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 
 PKG_SOURCE:=prplMesh-$(PKG_VERSION).tar.gz
 PKG_SOURCE_URL:=https://gitlab.com/prpl-foundation/prplmesh/prplMesh/-/archive/$(PKG_VERSION)/
@@ -59,8 +59,9 @@ CMAKE_OPTIONS += \
 	-DPython3_EXECUTABLE=$(HOST_PYTHON3_BIN)
 
 define Package/prplmesh/install
-	$(INSTALL_DIR) $(1)/usr/libexec/prplmesh/bin $(1)/usr/share/prplmesh/config $(1)/usr/lib $(1)/etc/init.d $(1)/etc/config
+	$(INSTALL_DIR) $(1)/usr/libexec/prplmesh/bin $(1)/usr/libexec/prplmesh/scripts $(1)/usr/share/prplmesh/config $(1)/usr/lib $(1)/etc/init.d $(1)/etc/config
 	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/libexec/prplmesh/bin/* $(1)/usr/libexec/prplmesh/bin/
+	$(INSTALL_BIN) $(PKG_INSTALL_DIR)/usr/libexec/prplmesh/scripts/prplmesh_utils.sh $(1)/usr/libexec/prplmesh/scripts/
 	$(INSTALL_DATA) $(PKG_INSTALL_DIR)/usr/libexec/prplmesh/share/* $(1)/usr/share/prplmesh/
 	$(INSTALL_DATA) $(PKG_INSTALL_DIR)/usr/libexec/prplmesh/config/* $(1)/usr/share/prplmesh/config/
 	$(LN) ../../share/prplmesh $(1)/usr/libexec/prplmesh/share

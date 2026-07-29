@@ -1,0 +1,40 @@
+From 9d1af44747ddf8f78ba1429461e14093a6ea6e49 Mon Sep 17 00:00:00 2001
+From: Andrei Ovcharenko <a@krot.name>
+Date: Wed, 29 Jul 2026 21:05:00 +0300
+Subject: [PATCH] logging: use production levels by default
+
+Debug and trace logging make normal link-metrics traffic dominate the
+controller log on stock OpenWrt. Keep informational, warning, error and
+fatal diagnostics, while leaving verbose levels available for an
+explicit troubleshooting session.
+
+Apply the same production default to file and syslog output for both the
+controller and agent so enabling syslog later cannot reintroduce the
+same amplification.
+
+Signed-off-by: Andrei Ovcharenko <a@krot.name>
+---
+ agent/config/beerocks_agent.conf.in         | 4 ++--
+ controller/config/beerocks_controller.conf.in | 4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+--- a/agent/config/beerocks_agent.conf.in
++++ b/agent/config/beerocks_agent.conf.in
+@@ -94,5 +94,5 @@
+ [log]
+-log_global_levels=error,info,warning,fatal,trace,debug
+-log_global_syslog_levels=error,info,warning,fatal,trace,debug
++log_global_levels=error,info,warning,fatal
++log_global_syslog_levels=error,info,warning,fatal
+ log_global_size=@BEEROCKS_AGENT_LOG_SIZE@
+ log_files_enabled=@BEEROCKS_LOG_FILES_ENABLED@
+--- a/controller/config/beerocks_controller.conf.in
++++ b/controller/config/beerocks_controller.conf.in
+@@ -58,5 +58,5 @@
+ [log]
+-log_global_levels=error,info,warning,fatal,trace,debug
+-log_global_syslog_levels=error,info,warning,fatal,trace,debug
++log_global_levels=error,info,warning,fatal
++log_global_syslog_levels=error,info,warning,fatal
+ log_global_size=@BEEROCKS_CONTROLLER_LOG_SIZE@
+ log_files_enabled=@BEEROCKS_LOG_FILES_ENABLED@
