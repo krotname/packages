@@ -25,7 +25,7 @@ define Package/prplmesh
   CATEGORY:=Network
   TITLE:=prplMesh controller and agent for stock OpenWrt
   URL:=https://gitlab.com/prpl-foundation/prplmesh/prplMesh
-  DEPENDS:=+libstdcpp +libpthread +librt +libjson-c +libopenssl +libnl-core +libnl-genl +libnl-route +libuci +libubus +libubox
+  DEPENDS:=+libstdcpp +libpthread +librt +libjson-c +libopenssl +libnl-core +libnl-genl +libnl-route +libuci +libubus +libubox +getopt
 endef
 
 define Package/prplmesh/description
