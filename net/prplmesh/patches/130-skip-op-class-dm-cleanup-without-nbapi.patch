@@ -1,0 +1,35 @@
+From 7bfb560bcb84cbb497335cc6173140a9880822af Mon Sep 17 00:00:00 2001
+From: Andrei Ovcharenko <a@krot.name>
+Date: Tue, 28 Jul 2026 22:45:00 +0300
+Subject: [PATCH] controller: skip op class DM cleanup without a data model
+
+Stock OpenWrt builds prplMesh without NBAPI, leaving radio data model
+paths empty. The operating channel report handler already treats that
+state as valid, but the follow-up cleanup still tries to update five
+empty CurrentOperatingClassProfile paths per radio. This floods the
+controller log even though the operational channel is updated.
+
+Mirror the existing guard in handle_current_op_class and skip the
+data-model-only cleanup when the radio has no data model path.
+
+Not yet submitted upstream; targeted at prplMesh master as part of
+the planned resubmission of this series.
+
+Signed-off-by: Andrei Ovcharenko <a@krot.name>
+---
+ controller/src/beerocks/master/db/db.cpp | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+--- a/controller/src/beerocks/master/db/db.cpp
++++ b/controller/src/beerocks/master/db/db.cpp
+@@ -7087,6 +7087,10 @@ bool db::dm_clear_empty_current_op_class
+         return false;
+     }
+ 
++    if (radio->dm_path.empty()) {
++        return true;
++    }
++
+     for (int i = 0; i < Agent::operatingClassProfileIndex::OPERATING_CLASS_MAX_BW; i++) {
+         if (radio->current_operating_class_profile[i].op_class == 0) {
+             set_dm_current_op_class(radio_mac, i, 0, 0, 0);
