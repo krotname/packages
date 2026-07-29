@@ -1,9 +1,11 @@
 --- a/common/beerocks/scripts/prplmesh_utils.sh.in
 +++ b/common/beerocks/scripts/prplmesh_utils.sh.in
-@@ -166,5 +166,5 @@
+@@ -165,7 +165,7 @@ stop_func() {
+ 
  main() {
      case "${TARGET_PLATFORM}" in
 -        linux|rdkb)
 +        linux|rdkb|openwrt)
              ;;
          *)
+             echo "Unsupported platform: ${TARGET_PLATFORM}" >&2
