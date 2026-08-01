@@ -15,6 +15,9 @@ prplmesh)
 	done
 	test -x /usr/libexec/prplmesh/scripts/prplmesh_utils.sh
 	/usr/libexec/prplmesh/scripts/prplmesh_utils.sh -h >/dev/null
+	grep -F 'register_log_roller || return 1' /etc/init.d/prplmesh
+	# shellcheck disable=SC2016
+	grep -F '"$helper" roll_logs || logger -t prplmesh "log roll failed"' /etc/init.d/prplmesh
 	;;
 *)
 	echo "Untested package: $PKG_NAME" >&2

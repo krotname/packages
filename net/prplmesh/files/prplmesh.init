@@ -7,6 +7,7 @@ STOP=10
 USE_PROCD=1
 
 PRPLMESH_DIR=/usr/libexec/prplmesh
+LOG_ROLL_INTERVAL_SECONDS=86400
 
 enabled() {
 	[ "$(uci -q get prplmesh.config.enabled)" = "1" ]
@@ -17,6 +18,28 @@ register_process() {
 	procd_open_instance "$name"
 	procd_set_param command "$@"
 	procd_set_param env PRPLMESH_DIR="$PRPLMESH_DIR"
+	procd_set_param respawn 3600 5 5
+	procd_set_param stdout 1
+	procd_set_param stderr 1
+	procd_close_instance
+}
+
+register_log_roller() {
+	local helper="$PRPLMESH_DIR/scripts/prplmesh_utils.sh"
+
+	[ -x "$helper" ] || {
+		logger -t prplmesh "log-roll helper is missing or not executable"
+		return 1
+	}
+
+	procd_open_instance log-roller
+	# shellcheck disable=SC2016
+	procd_set_param command /bin/sh -c '
+		helper=$1
+		interval=$2
+		while sleep "$interval"; do
+			"$helper" roll_logs || logger -t prplmesh "log roll failed"
+		done' sh "$helper" "$LOG_ROLL_INTERVAL_SECONDS"
 	procd_set_param respawn 3600 5 5
 	procd_set_param stdout 1
 	procd_set_param stderr 1
@@ -60,6 +83,7 @@ start_service() {
 	fi
 
 	register_process transport "$PRPLMESH_DIR/bin/ieee1905_transport"
+	register_log_roller || return 1
 
 	if [ "$need_controller" = 1 ]; then
 		register_process controller "$PRPLMESH_DIR/bin/beerocks_controller"
