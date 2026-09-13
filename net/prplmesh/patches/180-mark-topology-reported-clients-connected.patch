@@ -1,0 +1,43 @@
+From 4a53626de35419a859a071aa345a3eeb6bcb4b7d Mon Sep 17 00:00:00 2001
+From: Andrei Ovcharenko <a@krot.name>
+Date: Mon, 14 Sep 2026 00:47:00 +0300
+Subject: [PATCH] controller: mark topology-reported clients connected
+
+Some agents send a topology notification without the optional client
+association event. The controller then falls back to a topology query and
+adds every station from the Associated Clients TLV, but add_station() leaves
+new entries disconnected. Subsequent topology responses see the entry under
+its BSS and skip it, so BML omits a client that remains associated in hostapd.
+
+Reconcile the state of every currently reported station after applying the
+topology snapshot. This also repairs stale disconnected entries created by an
+earlier query while preserving the ordinary association-notification path.
+
+Signed-off-by: Andrei Ovcharenko <a@krot.name>
+---
+ controller/src/beerocks/master/tasks/topology_task.cpp | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+--- a/controller/src/beerocks/master/tasks/topology_task.cpp
++++ b/controller/src/beerocks/master/tasks/topology_task.cpp
+@@ -883,6 +883,20 @@ bool topology_task::handle_associated_cl
+ 
+         database.add_station(agent.al_mac, sta_mac, current_bssid);
+     }
++
++    // A topology response is authoritative for the current association state. If the agent
++    // omitted the optional Client Association Event TLV, add_station() above creates the
++    // station but intentionally leaves it disconnected. The next topology response then sees
++    // the station under its BSS and would keep skipping it forever, which also hides it from
++    // BML. Reconcile every station in the reported snapshot, including stale entries created
++    // by an earlier response.
++    for (const auto &connected_pair : current_connected) {
++        auto station = database.get_station(connected_pair.first);
++        if (station && station->state != beerocks::STATE_CONNECTED) {
++            son_actions::handle_completed_connection(database, cmdu_tx, tasks,
++                                                     tlvf::mac_to_string(connected_pair.first));
++        }
++    }
+ 
+     return true;
+ }
