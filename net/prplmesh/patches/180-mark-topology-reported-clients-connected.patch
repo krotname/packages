@@ -20,11 +20,10 @@ Signed-off-by: Andrei Ovcharenko <a@krot.name>
 
 --- a/controller/src/beerocks/master/tasks/topology_task.cpp
 +++ b/controller/src/beerocks/master/tasks/topology_task.cpp
-@@ -883,6 +883,20 @@ bool topology_task::handle_associated_cl
- 
+@@ -884,6 +884,20 @@ bool topology_task::handle_associated_cl
          database.add_station(agent.al_mac, sta_mac, current_bssid);
      }
-+
+ 
 +    // A topology response is authoritative for the current association state. If the agent
 +    // omitted the optional Client Association Event TLV, add_station() above creates the
 +    // station but intentionally leaves it disconnected. The next topology response then sees
@@ -38,6 +37,7 @@ Signed-off-by: Andrei Ovcharenko <a@krot.name>
 +                                                     tlvf::mac_to_string(connected_pair.first));
 +        }
 +    }
- 
++
      return true;
  }
+ 
