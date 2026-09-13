@@ -1,0 +1,52 @@
+From 7be23388d8e34960a5b155c6d8ea8763b1ec17bb Mon Sep 17 00:00:00 2001
+From: Andrei Ovcharenko <a@krot.name>
+Date: Mon, 14 Sep 2026 02:15:00 +0300
+Subject: [PATCH] nl80211: preserve BSSID for imported clients
+
+The startup STA-FIRST/STA-NEXT sweep populated the station MAC and VAP id
+but left the BSSID zeroed. The agent therefore discarded every imported
+association because it could not map 00:00:00:00:00:00 to a radio, leaving
+clients that were already connected before an agent restart absent from the
+topology and BML.
+
+Copy the enumerated VAP BSSID into the synthetic association event so the
+normal AgentDB and controller notification path can process it.
+
+Signed-off-by: Andrei Ovcharenko <a@krot.name>
+---
+ .../bwl/nl80211/ap_wlan_hal_nl80211.cpp      | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
+
+--- a/common/beerocks/bwl/nl80211/ap_wlan_hal_nl80211.cpp
++++ b/common/beerocks/bwl/nl80211/ap_wlan_hal_nl80211.cpp
+@@ -1392,7 +1392,8 @@ static void sta_caps_from_rates(const in
+ // notification. Returns nullptr on malformed input. A station that has not
+ // completed association carries no connected_time line; it is reported
+ // through @a associated so the caller can skip it but keep iterating.
+-static std::shared_ptr<char> parse_sta_block(const std::string &reply, int vap_id, bool radio_5G,
++static std::shared_ptr<char> parse_sta_block(const std::string &reply, int vap_id,
++                                             const sMacAddr &bssid, bool radio_5G,
+                                              bool &associated, sMacAddr &mac_out)
+ {
+     std::istringstream stream(reply);
+@@ -1433,6 +1434,7 @@ static std::shared_ptr<char> parse_sta_b
+ 
+     msg->params.vap_id       = vap_id;
+     msg->params.mac          = mac_out;
++    msg->params.bssid        = bssid;
+     msg->params.capabilities = {};
+ 
+     int supported_rates[16] = {0};
+@@ -1545,8 +1547,10 @@ bool ap_wlan_hal_nl80211::generate_conn
+ 
+             bool associated = false;
+             sMacAddr sta_mac;
+-            auto msg_buff = parse_sta_block(text, m_vap_id_in_progress, get_radio_info().is_5ghz,
+-                                            associated, sta_mac);
++            auto msg_buff =
++                parse_sta_block(text, m_vap_id_in_progress,
++                                tlvf::mac_from_string(vap_it->second.mac),
++                                get_radio_info().is_5ghz, associated, sta_mac);
+             if (!msg_buff) {
+                 LOG(WARNING) << "Malformed station block on " << vap_iface
+                              << ", skipping the rest of this VAP";
