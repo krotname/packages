@@ -1,0 +1,33 @@
+--- a/common/beerocks/bwl/nl80211/ap_wlan_hal_nl80211.cpp
++++ b/common/beerocks/bwl/nl80211/ap_wlan_hal_nl80211.cpp
+@@ -1392,7 +1392,8 @@ static void sta_caps_from_rates(const in
+ // notification. Returns nullptr on malformed input. A station that has not
+ // completed association carries no connected_time line; it is reported
+ // through @a associated so the caller can skip it but keep iterating.
+-static std::shared_ptr<char> parse_sta_block(const std::string &reply, int vap_id, bool radio_5G,
++static std::shared_ptr<char> parse_sta_block(const std::string &reply, int vap_id,
++                                             const sMacAddr &bssid, bool radio_5G,
+                                              bool &associated, sMacAddr &mac_out)
+ {
+     std::istringstream stream(reply);
+@@ -1433,6 +1434,7 @@ static std::shared_ptr<char> parse_sta_b
+ 
+     msg->params.vap_id       = vap_id;
+     msg->params.mac          = mac_out;
++    msg->params.bssid        = bssid;
+     msg->params.capabilities = {};
+ 
+     int supported_rates[16] = {0};
+@@ -1545,8 +1547,10 @@ bool ap_wlan_hal_nl80211::generate_conne
+ 
+             bool associated = false;
+             sMacAddr sta_mac;
+-            auto msg_buff = parse_sta_block(text, m_vap_id_in_progress, get_radio_info().is_5ghz,
+-                                            associated, sta_mac);
++            auto msg_buff =
++                parse_sta_block(text, m_vap_id_in_progress,
++                                tlvf::mac_from_string(vap_it->second.mac),
++                                get_radio_info().is_5ghz, associated, sta_mac);
+             if (!msg_buff) {
+                 LOG(WARNING) << "Malformed station block on " << vap_iface
+                              << ", skipping the rest of this VAP";

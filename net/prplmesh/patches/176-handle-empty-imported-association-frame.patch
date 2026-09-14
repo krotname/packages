@@ -1,0 +1,21 @@
+--- a/agent/src/beerocks/slave/son_slave_thread.cpp
++++ b/agent/src/beerocks/slave/son_slave_thread.cpp
+@@ -2607,10 +2607,15 @@ bool slave_thread::process_client_associ
+             return false;
+         }
+ 
++        const auto association_frame_length = notification_in->association_frame_length();
++        uint8_t empty_association_frame      = 0;
++        auto association_frame = association_frame_length > 0
++                                     ? notification_in->association_frame()
++                                     : &empty_association_frame;
+         radio->associated_clients.emplace(
+-            client_mac, AgentDB::sRadio::sClient{bssid, notification_in->association_frame_length(),
+-                                                 notification_in->association_frame(),
+-                                                 notification_in->capabilities().btm_supported});
++            client_mac,
++            AgentDB::sRadio::sClient{bssid, association_frame_length, association_frame,
++                                     notification_in->capabilities().btm_supported});
+ 
+         auto pending_wds_it = m_pending_wds_iface_notifications.find(client_mac);
+         if (pending_wds_it != m_pending_wds_iface_notifications.end()) {

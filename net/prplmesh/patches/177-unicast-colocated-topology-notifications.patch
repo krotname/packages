@@ -1,0 +1,18 @@
+--- a/agent/src/beerocks/slave/son_slave_thread.cpp
++++ b/agent/src/beerocks/slave/son_slave_thread.cpp
+@@ -5560,6 +5560,15 @@ bool slave_thread::send_cmdu_to_controll
+     sMacAddr dst_addr;
+     switch (cmdu_tx.getMessageType()) {
+     case ieee1905_1::eMessageType::TOPOLOGY_NOTIFICATION_MESSAGE:
++        // Multicast topology notifications are not looped back to a controller that is
++        // colocated with this agent. Other controller-bound CMDUs already use unicast and
++        // reach the local controller through the broker, so do the same for this case.
++        if (db->controller_info.bridge_mac == src_addr) {
++            dst_addr = db->controller_info.bridge_mac;
++            break;
++        }
++        dst_addr = network_utils::MULTICAST_1905_MAC_ADDR;
++        break;
+     case ieee1905_1::eMessageType::AP_AUTOCONFIGURATION_SEARCH_MESSAGE:
+     case ieee1905_1::eMessageType::ASSOCIATION_STATUS_NOTIFICATION_MESSAGE:
+         dst_addr = network_utils::MULTICAST_1905_MAC_ADDR;
