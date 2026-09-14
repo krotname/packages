@@ -1,7 +1,5 @@
-Index: prplmesh-quilt-r6-lf-20260914/agent/src/beerocks/slave/son_slave_thread.cpp
-===================================================================
---- prplmesh-quilt-r6-lf-20260914.orig/agent/src/beerocks/slave/son_slave_thread.cpp
-+++ prplmesh-quilt-r6-lf-20260914/agent/src/beerocks/slave/son_slave_thread.cpp
+--- a/agent/src/beerocks/slave/son_slave_thread.cpp
++++ b/agent/src/beerocks/slave/son_slave_thread.cpp
 @@ -5560,6 +5560,15 @@ bool slave_thread::send_cmdu_to_controll
      sMacAddr dst_addr;
      switch (cmdu_tx.getMessageType()) {
