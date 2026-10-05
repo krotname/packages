@@ -1,5 +1,11 @@
 # OpenWrt packages feed
 
+[![CI](https://github.com/krotname/packages/actions/workflows/llm-review.yml/badge.svg?branch=master)](https://github.com/krotname/packages/actions/workflows/llm-review.yml?query=branch%3Amaster)
+[![License: GPL-2.0](https://img.shields.io/badge/license-GPL--2.0-blue.svg)](LICENSE)
+[![Makefile](https://img.shields.io/badge/Makefile-technology-555.svg)](https://github.com/krotname/packages/search?l=Makefile)
+[![Shell](https://img.shields.io/badge/Shell-technology-555.svg)](https://github.com/krotname/packages/search?l=Shell)
+[![C++](https://img.shields.io/badge/C%2B%2B-technology-555.svg)](https://github.com/krotname/packages/search?l=C%2B%2B)
+
 ## Description
 
 This is the OpenWrt "packages"-feed containing community-maintained build scripts, options and patches for applications, modules and libraries used within OpenWrt.
@@ -23,4 +29,3 @@ See [LICENSE](LICENSE) file.
 ## Package Guidelines
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) file.
-
