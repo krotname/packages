@@ -10,17 +10,21 @@ new entries disconnected. Subsequent topology responses see the entry under
 its BSS and skip it, so BML omits a client that remains associated in hostapd.
 
 Reconcile the state of every currently reported station after applying the
-topology snapshot. This also repairs stale disconnected entries created by an
-earlier query while preserving the ordinary association-notification path.
+topology snapshot, but only when it is attached to a BSS of the reporting
+agent. add_station() can return an existing station even when BSS lookup
+fails, so a non-null station alone is not enough to complete a connection.
+Initialize the Wi-Fi interface type, channel and VAP ID as in the ordinary
+association-notification path; new stations otherwise retain Ethernet
+defaults and never receive wireless association handling.
 
 Signed-off-by: Andrei Ovcharenko <a@krot.name>
 ---
- controller/src/beerocks/master/tasks/topology_task.cpp | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
+ controller/src/beerocks/master/tasks/topology_task.cpp | 26 ++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
 
 --- a/controller/src/beerocks/master/tasks/topology_task.cpp
 +++ b/controller/src/beerocks/master/tasks/topology_task.cpp
-@@ -884,6 +884,20 @@ bool topology_task::handle_associated_cl
+@@ -884,6 +884,32 @@ bool topology_task::handle_associated_cl
          database.add_station(agent.al_mac, sta_mac, current_bssid);
      }
  
@@ -32,9 +36,21 @@ Signed-off-by: Andrei Ovcharenko <a@krot.name>
 +    // by an earlier response.
 +    for (const auto &connected_pair : current_connected) {
 +        auto station = database.get_station(connected_pair.first);
-+        if (station && station->state != beerocks::STATE_CONNECTED) {
-+            son_actions::handle_completed_connection(database, cmdu_tx, tasks,
-+                                                     tlvf::mac_to_string(connected_pair.first));
++        auto bss     = database.get_bss(connected_pair.second, agent.al_mac);
++        if (!station || !bss || station->get_bss() != bss) {
++            // Do not complete a failed BSS lookup or a station attached to another agent.
++            continue;
++        }
++
++        const auto client_mac = tlvf::mac_to_string(connected_pair.first);
++        database.set_sta_backhaul_iface_type(connected_pair.first,
++                                            beerocks::IFACE_TYPE_WIFI_UNSPECIFIED);
++        database.set_sta_wifi_channel(connected_pair.first,
++                                      database.get_radio_wifi_channel(bss->radio.radio_uid));
++        database.set_sta_vap_id(client_mac, database.get_bss_vap_id(bss->bssid));
++
++        if (station->state != beerocks::STATE_CONNECTED) {
++            son_actions::handle_completed_connection(database, cmdu_tx, tasks, client_mac);
 +        }
 +    }
 +
